@@ -1862,6 +1862,7 @@ def make_robot_env(cfg: EnvConfig) -> gym.Env:
             render_mode="human",
             use_gripper=cfg.wrapper.use_gripper,
             gripper_penalty=cfg.wrapper.gripper_penalty,
+            max_episode_steps=int(cfg.wrapper.control_time_s * cfg.fps),
         )
         env = GymHilObservationProcessorWrapper(env=env)
         env = GymHilDeviceWrapper(env=env, device=cfg.device)
