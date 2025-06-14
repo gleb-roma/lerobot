@@ -140,3 +140,9 @@ test-tdmpc-ete-eval:
 		--env.task=XarmLift-v0 \
 		--eval.n_episodes=1 \
 		--eval.batch_size=1
+
+run:
+	mjpython lerobot/scripts/rl/gym_manipulator.py --config_path env_config.json
+
+clean:
+	rm -rf /Users/glebr/.cache/huggingface/lerobot/pepijn223/il_gym0
