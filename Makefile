@@ -145,4 +145,4 @@ run:
 	mjpython lerobot/scripts/rl/gym_manipulator.py --config_path env_config.json
 
 clean:
-	rm -rf /Users/glebr/.cache/huggingface/lerobot/pepijn223/il_gym0
+	rm -rf ~/.cache/huggingface/lerobot/pepijn223/il_gym0
