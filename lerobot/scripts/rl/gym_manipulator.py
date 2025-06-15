@@ -571,6 +571,12 @@ class RewardWrapper(gym.Wrapper):
                 else 0.0
             )
         info["Reward classifier frequency"] = 1 / (time.perf_counter() - start_time)
+        logging.info(f"Success: {success}")
+        logging.info(f"Terminated: {terminated}")
+        logging.info(f"Truncated: {truncated}")
+        logging.info(f"Reward: {reward}")
+        logging.info(f"Observation: {observation}")
+        logging.info(f"Info: {info}")
 
         reward = 0.0
         if success == 1.0:
@@ -2110,10 +2116,14 @@ def record_dataset(env, policy, cfg):
             obs_processed = {k: v.cpu().squeeze(0).float() for k, v in obs.items()}
 
             # Check if we've just detected success
+            logging.info(f"Reward: {reward}")
+
             if reward == 1.0 and not success_detected:
-                success_detected = True
+                reward = 0.0
+               # success_detected = True
                 logging.info("Success detected! Collecting additional success states.")
 
+            logging.info(f"Success detected: {success_detected}")
             # Add frame to dataset - continue marking as success even during extra collection steps
             frame = {**obs_processed, **recorded_action}
 
@@ -2124,6 +2134,8 @@ def record_dataset(env, policy, cfg):
                 frame["next.reward"] = np.array([reward], dtype=np.float32)
 
             # Only mark as done if we're truly done (reached end or collected enough success states)
+            terminated = False
+            truncated = False
             really_done = terminated or truncated
             if success_detected:
                 success_steps_collected += 1
@@ -2142,6 +2154,9 @@ def record_dataset(env, policy, cfg):
 
             # Check if we should end the episode
             if (terminated or truncated) and not success_detected:
+                logging.info("Terminated or truncated without success")
+                logging.info(f"Terminated: {terminated}")
+                logging.info(f"Truncated: {truncated}")
                 # Regular termination without success
                 break
             elif success_detected and success_steps_collected >= cfg.number_of_steps_after_success:
@@ -2210,7 +2225,10 @@ def main(cfg: EnvConfig):
 
     if cfg.mode == "record":
         policy = None
+        logging.info("Record dataset 0")
         if cfg.pretrained_policy_name_or_path is not None:
+            logging.info("Record dataset 1")
+            logging.info(f"Loading policy from {cfg.pretrained_policy_name_or_path}")
             from lerobot.common.policies.sac.modeling_sac import SACPolicy
 
             policy = SACPolicy.from_pretrained(cfg.pretrained_policy_name_or_path)
@@ -2233,6 +2251,7 @@ def main(cfg: EnvConfig):
 
     env.reset()
 
+    logging.info("Replay dataset 0")
     # Initialize the smoothed action as a random sample.
     smoothed_action = env.action_space.sample() * 0.0
 
