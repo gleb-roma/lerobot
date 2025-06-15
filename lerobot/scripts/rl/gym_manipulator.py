@@ -641,7 +641,7 @@ class TimeLimitWrapper(gym.Wrapper):
             logging.debug(f"Current timestep exceeded expected fps {self.fps}")
 
         if self.current_step >= self.max_episode_steps:
-            terminated = True
+            truncated = True
         return obs, reward, terminated, truncated, info
 
     def reset(self, seed=None, options=None):
@@ -1701,6 +1701,18 @@ class GamepadControlWrapper(gym.Wrapper):
         # Call the parent close method
         return self.env.close()
 
+    def reset(self, *args, **kwargs):
+        """
+        Ensure that any lingering episode-end flags from the previous episode are cleared on reset.
+        """
+        if hasattr(self.teleop_device, "gamepad") and self.teleop_device.gamepad is not None:
+            # Best-effort clearing of episode status depending on implementation details
+            if hasattr(self.teleop_device.gamepad, "reset_episode_end_status"):
+                self.teleop_device.gamepad.reset_episode_end_status()
+            elif hasattr(self.teleop_device.gamepad, "_episode_end_status"):
+                self.teleop_device.gamepad._episode_end_status = None
+        return super().reset(*args, **kwargs)
+
 
 class KeyboardControlWrapper(GamepadControlWrapper):
     """
@@ -1862,12 +1874,22 @@ def make_robot_env(cfg: EnvConfig) -> gym.Env:
             render_mode="human",
             use_gripper=cfg.wrapper.use_gripper,
             gripper_penalty=cfg.wrapper.gripper_penalty,
-            max_episode_steps=int(cfg.wrapper.control_time_s * cfg.fps),
         )
+        # Explicitly adjust the underlying episode-length parameters, if present
+        desired_max_steps = int(cfg.wrapper.control_time_s * cfg.fps)
+        if hasattr(env, "_max_episode_steps"):
+            env._max_episode_steps = desired_max_steps
+        if hasattr(env, "spec") and env.spec is not None and hasattr(env.spec, "max_episode_steps"):
+            env.spec.max_episode_steps = desired_max_steps
+        # In some gym versions, the raw (unwrapped) env may also expose _max_episode_steps
+        if hasattr(env.unwrapped, "_max_episode_steps"):
+            env.unwrapped._max_episode_steps = desired_max_steps
+
         env = GymHilObservationProcessorWrapper(env=env)
         env = GymHilDeviceWrapper(env=env, device=cfg.device)
         env = BatchCompatibleWrapper(env=env)
         env = TorchActionWrapper(env=env, device=cfg.device)
+        env = TimeLimitWrapper(env=env, control_time_s=cfg.wrapper.control_time_s, fps=cfg.fps)
         return env
 
     if not hasattr(cfg, "robot") or not hasattr(cfg, "teleop"):
@@ -2087,7 +2109,9 @@ def record_dataset(env, policy, cfg):
         success_steps_collected = 0
 
         # Run episode steps
-        while time.perf_counter() - start_episode_t < cfg.wrapper.control_time_s:
+        terminated = False
+        truncated = False
+        while not (terminated or truncated):
             start_loop_t = time.perf_counter()
 
             # Get action from policy if available
