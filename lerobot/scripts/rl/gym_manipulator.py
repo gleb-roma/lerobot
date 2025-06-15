@@ -571,12 +571,6 @@ class RewardWrapper(gym.Wrapper):
                 else 0.0
             )
         info["Reward classifier frequency"] = 1 / (time.perf_counter() - start_time)
-        logging.info(f"Success: {success}")
-        logging.info(f"Terminated: {terminated}")
-        logging.info(f"Truncated: {truncated}")
-        logging.info(f"Reward: {reward}")
-        logging.info(f"Observation: {observation}")
-        logging.info(f"Info: {info}")
 
         reward = 0.0
         if success == 1.0:
@@ -2134,8 +2128,6 @@ def record_dataset(env, policy, cfg):
                 frame["next.reward"] = np.array([reward], dtype=np.float32)
 
             # Only mark as done if we're truly done (reached end or collected enough success states)
-            terminated = False
-            truncated = False
             really_done = terminated or truncated
             if success_detected:
                 success_steps_collected += 1
