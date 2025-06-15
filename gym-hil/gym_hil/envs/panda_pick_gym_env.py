@@ -144,7 +144,8 @@ class PandaPickCubeGymEnv(FrankaGymEnv):
         )
 
         terminated = bool(success or exceeded_bounds)
-
+        terminated = False
+        
         return obs, rew, terminated, False, {"succeed": success}
 
     def _compute_observation(self) -> dict:
