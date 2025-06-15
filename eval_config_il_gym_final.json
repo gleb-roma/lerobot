@@ -95,7 +95,7 @@
         "mode": "eval",
         "repo_id": null,
         "dataset_root": null,
-        "task": "PandaPickCube-v0",
+        "task": "PandaPickCubeKeyboard-v0",
         "num_episodes": 5,
         "episode": 0,
         "pretrained_policy_name_or_path": "outputs/train/il_sim_test1/checkpoints/last/pretrained_model",
