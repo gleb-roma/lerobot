@@ -211,7 +211,7 @@ class KeyboardEndEffectorTeleop(KeyboardTeleop):
                 delta_z = -int(val)
             elif key == keyboard.Key.shift_r:
                 delta_z = int(val)
-            elif key == keyboard.Key.ctrl_r:
+            elif key == keyboard.Key.alt_r:
                 # Gripper actions are expected to be between 0 (close), 1 (stay), 2 (open)
                 gripper_action = int(val) + 1
             elif key == keyboard.Key.ctrl_l:
