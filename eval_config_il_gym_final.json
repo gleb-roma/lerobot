@@ -98,7 +98,7 @@
         "task": "PandaPickCubeKeyboard-v0",
         "num_episodes": 5,
         "episode": 0,
-        "pretrained_policy_name_or_path": "outputs/train/il_sim_test1/checkpoints/last/pretrained_model",
+        "pretrained_policy_name_or_path": "outputs/train/il_sim_test4/checkpoints/last/pretrained_model",
         "device": "mps",
         "push_to_hub": false,
         "fps": 10,
